@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}
+Edit Product — GroceryGuard
+{% endblock %}
+
+{% block content %}
+
+<h1>Edit Product</h1>
+
+<form method="POST" class="form-card">
+
+    <div class="form-grid">
+
+        <div class="form-group">
+
+            <label>Product Name</label>
+
+            <input
+                type="text"
+                name="name"
+                value="{{ product.name }}"
+                required>
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>Category</label>
+
+            <input
+                type="text"
+                name="category"
+                value="{{ product.category }}"
+                required>
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>Quantity</label>
+
+            <input
+                type="number"
+                name="quantity"
+                value="{{ product.quantity }}"
+                min="0"
+                required>
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>Purchase Price</label>
+
+            <input
+                type="number"
+                name="purchase_price"
+                value="{{ product.purchase_price }}"
+                step="0.01"
+                required>
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>Selling Price</label>
+
+            <input
+                type="number"
+                name="selling_price"
+                value="{{ product.selling_price }}"
+                step="0.01"
+                required>
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>Supplier</label>
+
+            <input
+                type="text"
+                name="supplier_name"
+                value="{{ product.supplier_name or '' }}">
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>Expiry Date</label>
+
+            <input
+                type="date"
+                name="expiry_date"
+                value="{{ product.expiry_date or '' }}">
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>Minimum Stock</label>
+
+            <input
+                type="number"
+                name="minimum_stock"
+                value="{{ product.minimum_stock }}"
+                min="0"
+                required>
+
+        </div>
+
+    </div>
+
+
+    <button
+        class="btn"
+        type="submit">
+
+        Update Product
+
+    </button>
+
+    <a
+        href="{{ url_for('inventory') }}"
+        class="btn secondary">
+
+        Cancel
+
+    </a>
+
+</form>
+
+{% endblock %}

@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}
+Payments — GroceryGuard
+{% endblock %}
+
+{% block content %}
+
+<h1>Customer Payments</h1>
+
+<div class="form-card">
+
+    <h2>Record Payment</h2>
+
+    <form method="POST">
+
+        <div class="form-grid">
+
+            <div class="form-group">
+
+                <label>Customer</label>
+
+                <select
+                    name="customer_id"
+                    required>
+
+                    <option value="">
+                        Select Customer
+                    </option>
+
+                    {% for customer in customers %}
+
+                    <option value="{{ customer.customer_id }}">
+
+                        {{ customer.name }}
+
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Amount</label>
+
+                <input
+                    type="number"
+                    name="amount"
+                    step="0.01"
+                    min="0"
+                    required>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Payment Method</label>
+
+                <select
+                    name="payment_method"
+                    required>
+
+                    <option value="Cash">
+                        Cash
+                    </option>
+
+                    <option value="UPI">
+                        UPI
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Reference</label>
+
+                <input
+                    type="text"
+                    name="reference"
+                    placeholder="Optional">
+
+            </div>
+
+        </div>
+
+
+        <button
+            type="submit"
+            class="btn">
+
+            Record Payment
+
+        </button>
+
+    </form>
+
+</div>
+
+
+<div class="card">
+
+    <h2>Payment History</h2>
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>Customer</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Reference</th>
+                <th>Date</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            {% for payment in payment_history %}
+
+            <tr>
+
+                <td>
+                    {{ payment.customer_name }}
+                </td>
+
+                <td>
+                    ₹{{ "%.2f"|format(payment.amount) }}
+                </td>
+
+                <td>
+                    {{ payment.payment_method }}
+                </td>
+
+                <td>
+                    {{ payment.reference or "-" }}
+                </td>
+
+                <td>
+                    {{ payment.payment_date }}
+                </td>
+
+            </tr>
+
+            {% else %}
+
+            <tr>
+
+                <td colspan="5">
+                    No payments recorded.
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}

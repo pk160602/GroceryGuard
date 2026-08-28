@@ -1,0 +1,23 @@
+GroceryGuard/
+│
+├── app.py
+├── schema.sql
+├── requirements.txt
+│
+├── templates/
+│   ├── base.html
+│   ├── dashboard.html
+│   ├── inventory.html
+│   ├── add_product.html
+│   ├── edit_product.html
+│   ├── sales.html
+│   ├── customers.html
+│   ├── payments.html
+│   └── settings.html
+│
+└── static/
+    ├── css/
+    │   └── style.css
+    │
+    └── js/
+        └── app.js

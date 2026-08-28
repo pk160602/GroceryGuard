@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}
+Dashboard — GroceryGuard
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div>
+        <h1>Dashboard</h1>
+
+        <p>
+            Smart Inventory. Less Waste. Better Business.
+        </p>
+    </div>
+
+</div>
+
+
+<div class="stats-grid">
+
+    <div class="stat-card">
+
+        <span>Today's Sales</span>
+
+        <h2>₹{{ "%.2f"|format(today_sales) }}</h2>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <span>Total Products</span>
+
+        <h2>{{ total_products }}</h2>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <span>Total Stock</span>
+
+        <h2>{{ total_stock }}</h2>
+
+    </div>
+
+
+    <div class="stat-card warning-card">
+
+        <span>Low Stock</span>
+
+        <h2>{{ low_stock }}</h2>
+
+    </div>
+
+
+    <div class="stat-card warning-card">
+
+        <span>Expiring Soon</span>
+
+        <h2>{{ expiring_soon }}</h2>
+
+    </div>
+
+
+    <div class="stat-card danger-card">
+
+        <span>Expired</span>
+
+        <h2>{{ expired }}</h2>
+
+    </div>
+
+</div>
+
+
+<div class="quick-actions">
+
+    <a class="btn"
+       href="{{ url_for('add_product') }}">
+
+        + Add Product
+
+    </a>
+
+
+    <a class="btn"
+       href="{{ url_for('sales') }}">
+
+        Record Sale
+
+    </a>
+
+
+    <a class="btn secondary"
+       href="{{ url_for('inventory') }}">
+
+        View Inventory
+
+    </a>
+
+</div>
+
+
+<section class="card">
+
+    <h2>Recent Sales</h2>
+
+    {% if recent_sales %}
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>ID</th>
+                <th>Customer</th>
+                <th>Amount</th>
+                <th>Payment</th>
+                <th>Date</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            {% for sale in recent_sales %}
+
+            <tr>
+
+                <td>#{{ sale.sale_id }}</td>
+
+                <td>
+                    {{ sale.customer_name or "Walk-in Customer" }}
+                </td>
+
+                <td>
+                    ₹{{ "%.2f"|format(sale.total_amount) }}
+                </td>
+
+                <td>
+                    {{ sale.payment_method }}
+                </td>
+
+                <td>
+                    {{ sale.sale_date }}
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+    {% else %}
+
+    <p>No sales recorded yet.</p>
+
+    {% endif %}
+
+</section>
+
+{% endblock %}

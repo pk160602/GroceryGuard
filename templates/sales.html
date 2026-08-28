@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}
+Sales — GroceryGuard
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div>
+
+        <h1>Record Sale</h1>
+
+        <p>Record a customer purchase and update inventory.</p>
+
+    </div>
+
+</div>
+
+
+<form method="POST" class="form-card">
+
+    <div class="form-grid">
+
+        <div class="form-group">
+
+            <label>Product</label>
+
+            <select name="product_id" required>
+
+                <option value="">
+                    Select Product
+                </option>
+
+                {% for product in products %}
+
+                <option value="{{ product.product_id }}">
+
+                    {{ product.name }}
+                    — {{ product.quantity }} available
+                    — ₹{{ product.selling_price }}
+
+                </option>
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>Quantity</label>
+
+            <input
+                type="number"
+                name="quantity"
+                min="1"
+                required>
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>Customer</label>
+
+            <select name="customer_id">
+
+                <option value="">
+                    Walk-in Customer
+                </option>
+
+                {% for customer in customers %}
+
+                <option value="{{ customer.customer_id }}">
+
+                    {{ customer.name }}
+
+                </option>
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>Payment Method</label>
+
+            <select name="payment_method" required>
+
+                <option value="Cash">
+                    Cash
+                </option>
+
+                <option value="UPI">
+                    UPI
+                </option>
+
+                <option value="Credit">
+                    Credit
+                </option>
+
+            </select>
+
+        </div>
+
+    </div>
+
+
+    <button
+        type="submit"
+        class="btn">
+
+        Record Sale
+
+    </button>
+
+</form>
+
+
+<section class="card">
+
+    <h2>Recent Sales</h2>
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>ID</th>
+                <th>Customer</th>
+                <th>Total</th>
+                <th>Payment</th>
+                <th>Status</th>
+                <th>Date</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            {% for sale in recent_sales %}
+
+            <tr>
+
+                <td>#{{ sale.sale_id }}</td>
+
+                <td>
+                    {{ sale.customer_name or "Walk-in Customer" }}
+                </td>
+
+                <td>
+                    ₹{{ "%.2f"|format(sale.total_amount) }}
+                </td>
+
+                <td>
+                    {{ sale.payment_method }}
+                </td>
+
+                <td>
+                    {{ sale.payment_status }}
+                </td>
+
+                <td>
+                    {{ sale.sale_date }}
+                </td>
+
+            </tr>
+
+            {% else %}
+
+            <tr>
+
+                <td colspan="6">
+                    No sales yet.
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</section>
+
+{% endblock %}

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        {% block title %}GroceryGuard{% endblock %}
+    </title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+<body>
+
+<header class="navbar">
+
+    <div class="brand">
+        🛒 GroceryGuard
+    </div>
+
+    <nav>
+
+        <a href="{{ url_for('dashboard') }}">
+            Dashboard
+        </a>
+
+        <a href="{{ url_for('inventory') }}">
+            Inventory
+        </a>
+
+        <a href="{{ url_for('sales') }}">
+            Sales
+        </a>
+
+        <a href="{{ url_for('customers') }}">
+            Customers
+        </a>
+
+        <a href="{{ url_for('payments') }}">
+            Payments
+        </a>
+
+        <a href="{{ url_for('settings') }}">
+            Settings
+        </a>
+
+    </nav>
+
+</header>
+
+
+<main class="container">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% if messages %}
+
+            {% for category, message in messages %}
+
+                <div class="alert {{ category }}">
+                    {{ message }}
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    {% block content %}
+
+    {% endblock %}
+
+</main>
+
+
+<footer>
+
+    <p>© 2026 GroceryGuard</p>
+
+    <p>Developed by Piyush Kumar</p>
+
+    <p>
+        Built during internship at
+        Talking Crooks IT Pvt. Ltd.
+    </p>
+
+</footer>
+
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+</body>
+
+</html>
