@@ -22,10 +22,12 @@ class DBConnection:
         self.is_postgres = is_postgres
 
     def execute(self, query, params=()):
-        if self.is_postgres:
-            query = query.replace("?", "%s")
-            return self.connection.cursor().execute(query, params)
-        return self.connection.execute(query, params)
+    if self.is_postgres:
+        query = query.replace("?", "%s")
+        cursor = self.connection.cursor()
+        cursor.execute(query, params)
+        return cursor
+    return self.connection.execute(query, params)
 
     def executemany(self, query, params):
         if self.is_postgres:
