@@ -253,7 +253,7 @@ def inventory():
         "inventory.html",
         products=products,
         search=search,
-        current_date=date.today().isoformat()
+        current_date=date.today()
     )
 
 
