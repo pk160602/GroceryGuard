@@ -17,28 +17,32 @@ DATABASE_URL = os.environ.get("DATABASE_URL")
 class DBConnection:
     """Small compatibility wrapper so the same app works with SQLite locally
     and PostgreSQL on Render."""
+
     def __init__(self, connection, is_postgres=False):
         self.connection = connection
         self.is_postgres = is_postgres
 
     def execute(self, query, params=()):
-    if self.is_postgres:
-        query = query.replace("?", "%s")
-        cursor = self.connection.cursor()
-        cursor.execute(query, params)
-        return cursor
-    return self.connection.execute(query, params)
+        if self.is_postgres:
+            query = query.replace("?", "%s")
+            cursor = self.connection.cursor()
+            cursor.execute(query, params)
+            return cursor
+
+        return self.connection.execute(query, params)
 
     def executemany(self, query, params):
         if self.is_postgres:
             query = query.replace("?", "%s")
-            return self.connection.cursor().executemany(query, params)
+            cursor = self.connection.cursor()
+            cursor.executemany(query, params)
+            return cursor
+
         return self.connection.executemany(query, params)
 
     def executescript(self, script):
         if self.is_postgres:
             cursor = self.connection.cursor()
-            # PostgreSQL can execute the whole schema script in one call.
             cursor.execute(script)
             cursor.close()
         else:
@@ -53,12 +57,16 @@ class DBConnection:
 
 def get_db():
     if DATABASE_URL:
-        conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+        conn = psycopg2.connect(
+            DATABASE_URL,
+            cursor_factory=RealDictCursor
+        )
         return DBConnection(conn, is_postgres=True)
 
     conn = sqlite3.connect(SQLITE_DATABASE)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
+
     return DBConnection(conn, is_postgres=False)
 
 
@@ -81,14 +89,46 @@ def init_db():
 
         if count == 0:
             sample_products = [
-                ("Rice 5kg", "Grocery", 20, 300, 350,
-                 "ABC Distributors", "2027-06-15", 5),
-                ("Milk 1L", "Dairy", 8, 50, 60,
-                 "Fresh Dairy", "2026-09-02", 5),
-                ("Biscuits", "Snacks", 3, 20, 30,
-                 "XYZ Foods", "2026-10-20", 5),
-                ("Cooking Oil 1L", "Grocery", 15, 120, 140,
-                 "ABC Distributors", "2027-03-10", 5)
+                (
+                    "Rice 5kg",
+                    "Grocery",
+                    20,
+                    300,
+                    350,
+                    "ABC Distributors",
+                    "2027-06-15",
+                    5
+                ),
+                (
+                    "Milk 1L",
+                    "Dairy",
+                    8,
+                    50,
+                    60,
+                    "Fresh Dairy",
+                    "2026-09-02",
+                    5
+                ),
+                (
+                    "Biscuits",
+                    "Snacks",
+                    3,
+                    20,
+                    30,
+                    "XYZ Foods",
+                    "2026-10-20",
+                    5
+                ),
+                (
+                    "Cooking Oil 1L",
+                    "Grocery",
+                    15,
+                    120,
+                    140,
+                    "ABC Distributors",
+                    "2027-03-10",
+                    5
+                )
             ]
 
             conn.executemany("""
@@ -105,16 +145,19 @@ def init_db():
 @app.route("/")
 def dashboard():
     conn = get_db()
+
     today = date.today()
     tomorrow = today + timedelta(days=1)
     expiry_limit = today + timedelta(days=30)
 
     total_products = conn.execute("""
-        SELECT COUNT(*) AS count FROM products
+        SELECT COUNT(*) AS count
+        FROM products
     """).fetchone()["count"]
 
     total_stock = conn.execute("""
-        SELECT COALESCE(SUM(quantity), 0) AS total FROM products
+        SELECT COALESCE(SUM(quantity), 0) AS total
+        FROM products
     """).fetchone()["total"]
 
     low_stock = conn.execute("""
@@ -129,21 +172,29 @@ def dashboard():
         WHERE expiry_date IS NOT NULL
           AND expiry_date >= ?
           AND expiry_date <= ?
-    """, (today.isoformat(), expiry_limit.isoformat())).fetchone()["count"]
+    """, (
+        today.isoformat(),
+        expiry_limit.isoformat()
+    )).fetchone()["count"]
 
     expired = conn.execute("""
         SELECT COUNT(*) AS count
         FROM products
         WHERE expiry_date IS NOT NULL
           AND expiry_date < ?
-    """, (today.isoformat(),)).fetchone()["count"]
+    """, (
+        today.isoformat(),
+    )).fetchone()["count"]
 
     today_sales = conn.execute("""
         SELECT COALESCE(SUM(total_amount), 0) AS total
         FROM sales
         WHERE sale_date >= ?
           AND sale_date < ?
-    """, (today.isoformat(), tomorrow.isoformat())).fetchone()["total"]
+    """, (
+        today.isoformat(),
+        tomorrow.isoformat()
+    )).fetchone()["total"]
 
     recent_sales = conn.execute("""
         SELECT
@@ -185,10 +236,15 @@ def inventory():
             WHERE name LIKE ?
                OR category LIKE ?
             ORDER BY name
-        """, (f"%{search}%", f"%{search}%")).fetchall()
+        """, (
+            f"%{search}%",
+            f"%{search}%"
+        )).fetchall()
     else:
         products = conn.execute("""
-            SELECT * FROM products ORDER BY name
+            SELECT *
+            FROM products
+            ORDER BY name
         """).fetchall()
 
     conn.close()
@@ -222,9 +278,16 @@ def add_product():
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             RETURNING product_id
         """, (
-            name, category, quantity, purchase_price, selling_price,
-            supplier_name, expiry_date, minimum_stock
+            name,
+            category,
+            quantity,
+            purchase_price,
+            selling_price,
+            supplier_name,
+            expiry_date,
+            minimum_stock
         ))
+
         product_id = cursor.fetchone()["product_id"]
 
         conn.execute("""
@@ -232,13 +295,17 @@ def add_product():
             (product_id, transaction_type, quantity, notes)
             VALUES (?, ?, ?, ?)
         """, (
-            product_id, "Purchase", quantity, "Initial stock added"
+            product_id,
+            "Purchase",
+            quantity,
+            "Initial stock added"
         ))
 
         conn.commit()
         conn.close()
 
         flash("Product added successfully!", "success")
+
         return redirect(url_for("inventory"))
 
     return render_template("add_product.html")
@@ -249,8 +316,12 @@ def edit_product(product_id):
     conn = get_db()
 
     product = conn.execute("""
-        SELECT * FROM products WHERE product_id = ?
-    """, (product_id,)).fetchone()
+        SELECT *
+        FROM products
+        WHERE product_id = ?
+    """, (
+        product_id,
+    )).fetchone()
 
     if product is None:
         conn.close()
@@ -281,8 +352,15 @@ def edit_product(product_id):
                 minimum_stock = ?
             WHERE product_id = ?
         """, (
-            name, category, quantity, purchase_price, selling_price,
-            supplier_name, expiry_date, minimum_stock, product_id
+            name,
+            category,
+            quantity,
+            purchase_price,
+            selling_price,
+            supplier_name,
+            expiry_date,
+            minimum_stock,
+            product_id
         ))
 
         difference = quantity - old_quantity
@@ -303,10 +381,15 @@ def edit_product(product_id):
         conn.close()
 
         flash("Product updated successfully!", "success")
+
         return redirect(url_for("inventory"))
 
     conn.close()
-    return render_template("edit_product.html", product=product)
+
+    return render_template(
+        "edit_product.html",
+        product=product
+    )
 
 
 @app.route("/products/delete/<int:product_id>", methods=["POST"])
@@ -314,13 +397,17 @@ def delete_product(product_id):
     conn = get_db()
 
     conn.execute("""
-        DELETE FROM products WHERE product_id = ?
-    """, (product_id,))
+        DELETE FROM products
+        WHERE product_id = ?
+    """, (
+        product_id,
+    ))
 
     conn.commit()
     conn.close()
 
     flash("Product deleted successfully.", "success")
+
     return redirect(url_for("inventory"))
 
 
@@ -334,15 +421,23 @@ def customers():
         address = request.form["address"].strip()
 
         conn.execute("""
-            INSERT INTO customers (name, phone, address)
+            INSERT INTO customers
+            (name, phone, address)
             VALUES (?, ?, ?)
-        """, (name, phone, address))
+        """, (
+            name,
+            phone,
+            address
+        ))
 
         conn.commit()
+
         flash("Customer added successfully!", "success")
 
     customers_list = conn.execute("""
-        SELECT * FROM customers ORDER BY name
+        SELECT *
+        FROM customers
+        ORDER BY name
     """).fetchall()
 
     conn.close()
@@ -363,11 +458,18 @@ def sales():
         customer_id = request.form.get("customer_id")
         payment_method = request.form["payment_method"]
 
-        customer_id = None if customer_id == "" else int(customer_id)
+        customer_id = (
+            None if customer_id == ""
+            else int(customer_id)
+        )
 
         product = conn.execute("""
-            SELECT * FROM products WHERE product_id = ?
-        """, (product_id,)).fetchone()
+            SELECT *
+            FROM products
+            WHERE product_id = ?
+        """, (
+            product_id,
+        )).fetchone()
 
         if product is None:
             flash("Product not found.", "danger")
@@ -388,7 +490,12 @@ def sales():
             return redirect(url_for("sales"))
 
         total = quantity * product["selling_price"]
-        payment_status = "Pending" if payment_method == "Credit" else "Paid"
+
+        payment_status = (
+            "Pending"
+            if payment_method == "Credit"
+            else "Paid"
+        )
 
         cursor = conn.execute("""
             INSERT INTO sales
@@ -396,8 +503,12 @@ def sales():
             VALUES (?, ?, ?, ?)
             RETURNING sale_id
         """, (
-            customer_id, total, payment_method, payment_status
+            customer_id,
+            total,
+            payment_method,
+            payment_status
         ))
+
         sale_id = cursor.fetchone()["sale_id"]
 
         conn.execute("""
@@ -405,22 +516,31 @@ def sales():
             (sale_id, product_id, quantity, selling_price, subtotal)
             VALUES (?, ?, ?, ?, ?)
         """, (
-            sale_id, product_id, quantity,
-            product["selling_price"], total
+            sale_id,
+            product_id,
+            quantity,
+            product["selling_price"],
+            total
         ))
 
         conn.execute("""
             UPDATE products
             SET quantity = quantity - ?
             WHERE product_id = ?
-        """, (quantity, product_id))
+        """, (
+            quantity,
+            product_id
+        ))
 
         conn.execute("""
             INSERT INTO stock_transactions
             (product_id, transaction_type, quantity, notes)
             VALUES (?, ?, ?, ?)
         """, (
-            product_id, "Sale", -quantity, f"Sale #{sale_id}"
+            product_id,
+            "Sale",
+            -quantity,
+            f"Sale #{sale_id}"
         ))
 
         conn.commit()
@@ -431,13 +551,16 @@ def sales():
         )
 
     products = conn.execute("""
-        SELECT * FROM products
+        SELECT *
+        FROM products
         WHERE quantity > 0
         ORDER BY name
     """).fetchall()
 
     customers_list = conn.execute("""
-        SELECT * FROM customers ORDER BY name
+        SELECT *
+        FROM customers
+        ORDER BY name
     """).fetchall()
 
     recent_sales = conn.execute("""
@@ -476,7 +599,10 @@ def payments():
             (customer_id, amount, payment_method, reference)
             VALUES (?, ?, ?, ?)
         """, (
-            customer_id, amount, payment_method, reference
+            customer_id,
+            amount,
+            payment_method,
+            reference
         ))
 
         pending_sale = conn.execute("""
@@ -486,20 +612,27 @@ def payments():
               AND payment_status = 'Pending'
             ORDER BY sale_date
             LIMIT 1
-        """, (customer_id,)).fetchone()
+        """, (
+            customer_id,
+        )).fetchone()
 
         if pending_sale:
             conn.execute("""
                 UPDATE sales
                 SET payment_status = 'Paid'
                 WHERE sale_id = ?
-            """, (pending_sale["sale_id"],))
+            """, (
+                pending_sale["sale_id"],
+            ))
 
         conn.commit()
+
         flash("Payment recorded successfully!", "success")
 
     customers_list = conn.execute("""
-        SELECT * FROM customers ORDER BY name
+        SELECT *
+        FROM customers
+        ORDER BY name
     """).fetchall()
 
     payment_history = conn.execute("""
